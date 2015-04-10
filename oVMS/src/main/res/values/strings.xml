@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Remote Joystick</string>
+    <string name="Loading">Please wait</string>
+    <string name="Settings">Settings</string>
+    <string name="Range" formatted="false">Range: %s (%s estimated)</string>
+    <string name="LastUpdated" formatted="false">Updated: %1$tD %1$tT</string>
+    <string name="SOC">%s%%</string>
+    <string name="AddCar">+</string>
+    <string name="Cancel">Cancel</string>
+    <string name="Delete">Delete</string>
+    <string name="Save">Save</string>
+    <string name="Send">Send</string>
+    <string name="Error">Error</string>
+    <string name="Set">Set</string>
+    <string name="Control">Control</string>
+    <string name="ServerNameOrIP">Server Address (Domain or IP)</string>
+    <string name="NetPass">Server Password</string>
+    <string name="UserPass">User Password (Paranoid Mode)</string>
+    <string name="Quit">Exit Application</string>
+    <string name="Edit">Edit</string>
+    <string name="Yes">Yes</string>
+    <string name="No">No</string>
+    <string name="ClearNotifications">Clear Notifications</string>
+    <string name="VehicleImage">Vehicle Image</string>
+    <string name="btnAddCar">Add Car</string>
+    <string name="btnCenterMap">Center Map</string>
+    <string name="ImageParking">Vehicle Parking</string>
+    <string name="SysWarning">System Warning</string>
+    <string name="LockIdle">Vehicle Lock</string>
+    <string name="SignalStrength">Signal Strength</string>
+    <string name="ChargerPlug">Charger Plug</string>
+    <string name="DefaultCharging">70A/220V</string>
+    <string name="DefaultSlidetoCharge">SLIDE TO\nCHARGE</string>
+    <string name="DefaultMode">STANDARD</string>
+    <string name="ChargingOverlay">Charging</string>
+    <string name="BatteryOverlay">Battery</string>
+    <string name="EstimatedShort">ESTIMATED RANGE</string>
+    <string name="IdealShort">IDEAL RANGE</string>
+    <string name="BatteryText">Battery</string>
+    <string name="Homelink">Homelink</string>
+    <string name="Wakeup">Wakeup</string>
+    <string name="Add">Add</string>
+    <string name="Battery">Battery</string>
+    <string name="Car">Car</string>
+    <string name="Location">Location</string>
+    <string name="Messages">Messages</string>
+    <string name="Amps">Amps</string>
+    <string name="Close">Close</string>
+    <string name="Features">Features</string>
+    <string name="Parameters">Parameters</string>
+    <string name="Vehicle">Vehicle</string>
+    <string name="WIN">VIN</string>
+    <string name="Type">Type</string>
+    <string name="GMC">GSM</string>
+    <string name="CAC">CAC</string>
+    <string name="Server">Server</string>
+    <string name="App">App</string>
+    
+    <string name="lb_wakeup_car">Wakeup Car</string>
+    <string name="lb_unlock_car">Unlock Car</string>
+    <string name="lb_lock_car">Lock Car</string>
+    <string name="lb_valet_mode">Valet Mode</string>
+    <string name="lb_valet_mode_on">Valet On</string>
+    <string name="lb_valet_mode_off">Valet Off</string>
+    <string name="lb_enter_pin">Enter PIN</string>
+    <string name="lb_enter_passwd">Enter password</string>
+    <string name="lb_enter_value">Enter value</string>
+    <string name="lb_wrning_charger">WARNING\nIncorrect charger settings may damege electric systems!</string>
+    <string name="lb_charger_setting">Charger Setting</string>
+    <string name="lb_communications_problem">Communications Problem</string>
+    <string name="lb_vehicle_id">Vehicle ID</string>
+    <string name="lb_vehicle_label">Vehicle Label</string>
+    <string name="lb_server_passwd">OVMS Server Password</string>
+    <string name="lb_module_passwd">OVMS Module Password</string>
+    <string name="lb_slide_choice_vehicle">Slide for vehicle choice</string>
+    <string name="lb_mmi_ussd_code">MMI/USSD Code</string>
+    <string name="lb_cellular_usage">Cellular Usage</string>
+    <string name="lb_reset_ovms_module">Reset OVMS Module</string>
+    <string name="lb_center_map">Center map</string>
+    <string name="lb_ft_digital_speedo">#%d: Digital Speedo</string>
+    <string name="lb_ft_gps_stream">#%d: GPS Stream</string>
+    <string name="lb_ft_minimum_soc">#%d: Minimum SOC</string>
+    <string name="lb_ft_car_bits">#%d: Car Bits</string>
+    <string name="lb_ft_can_write">#%d: CAN Write</string>
+    <string name="lb_cp_registered_telephone">#%d: Registered Telephone</string>
+    <string name="lb_cp_module_password">#%d: Module Password</string>
+    <string name="lb_cp_miles_km">#%d: Miles/Km</string>
+    <string name="lb_cp_notifications">#%d: Notifications</string>
+    <string name="lb_cp_ovms_server_ip">#%d: OVMS Server IP</string>
+    <string name="lb_cp_cellular_network_apn">#%d: Cellular Network APN</string>
+    <string name="lb_cp_cellular_network_user">#%d: Cellular Network User</string>
+    <string name="lb_cp_cellular_network_password">#%d: Cellular Network Password</string>
+    <string name="lb_cp_vehicle_id">#%d: Vehicle ID</string>
+    <string name="lb_cp_server_password">#%d: Server Password</string>
+    <string name="lb_cp_paranoid_mode">#%d: Paranoid Mode</string>
+    <string name="lb_cp_social_group_1">#%d: Social Group #1</string>
+    <string name="lb_cp_social_group_2">#%d: Social Group #2</string>
+    <string name="lb_ovms_firmware">OVMS Firmware:</string>
+    <string name="lb_vehicle_info">Vehicle Info</string>
+    
+    <string name="msg_charger_range">Range Mode limits power\nFrequent use will reduce long-term battery life</string>
+    <string name="msg_charger_perform">Frequent use of Performance Mode\nwill reduce long-term battery life</string>
+    <string name="msg_wakeup_car">Waking up Car&#8230;</string>
+    <string name="msg_issuing_homelink">Issuing Homelink Command&#8230;</string>
+    <string name="msg_setting_charge_mc">Setting Charge Mode and Current&#8230;</string>
+    <string name="msg_setting_charge_m">Setting Charge Mode&#8230;</string>
+    <string name="msg_setting_charge_c">Setting Charge Current&#8230;</string>
+    <string name="msg_starting_charge">Starting Charge&#8230;</string>
+    <string name="msg_stopping_charge">Stopping Charge&#8230;</string>
+    <string name="msg_rebooting_car_module">Rebooting Car Module&#8230;</string>
+    <string name="msg_please_enter_value">Please enter a correct value</string>
+    <string name="msg_invalid_name">Your username must be greater than 3 characters length and cannot contain  special characters.</string>
+    <string name="msg_invalid_passwd">Your password must be between %1$d and %2$d characters in length.</string>
+    <string name="msg_invalid_id_already_registered">Vehicle ID %s is already registered. Please enter a another ID.</string>
+    <string name="msg_delete_this_car">Delete this car?</string>
+    <string name="msg_mmi_ssd_code">Enter MMI/USSD Code, then tap SEND to transmit the code to your vehicle\'s cellular provider</string>
+    
+    <string name="err_connection_lost">OVMS Server Connection Lost</string>
+    <string name="err_check_following">Please check the following:\n1. OVMS Server address\n2. Your vehicle ID and passwords</string>
+    <string name="err_failed">Failed: %s</string>
+    <string name="err_unsupported_operation">Unsupported operation</string>
+    <string name="err_unimplemented_operation">Unimplemented operation</string>
+
+    <string name="live">live</string>
+    <string name="ndays">%d days</string>
+    <string name="nhours">%d hours</string>
+    <string name="nmins">%d mins</string>
+    <string name="min1">1 min</string>
+    <string name="justnow">just now</string>
+    <string name="mph">mph</string>
+    <string name="kph">kph</string>
+    <string name="slidetocharge">SLIDE TO\nCHARGE</string>
+    <string name="timedcharge">TIMED CHARGE</string>
+    <string name="pushnotifications">Push Notifications</string>
+    <string name="pushnotifications_welcome">Push notifications received for your registered vehicles are archived here.</string>
+    <string formatted="false" name="charging">CHARGING\n%s %s</string>
+
+    <string name="textMOTOR">MOTOR</string>
+    <string name="textPEM">PEM</string>
+    <string name="textBATTERY">BATTERY</string>
+    <string name="textHOMELINK">HOMELINK</string>
+
+    <string-array name="en_charger">
+    	<item>Standard</item>
+        <item>Storage</item>
+        <item>Range</item>
+        <item>Perform</item>
+    </string-array>
+
+    <string-array name="scenarios_array">
+        <item>Joystick</item>
+        <item>Spooky</item>
+        <item>(Keanu Reeves)</item>
+    </string-array>
+    
+    <!-- RemoteJoystick Debug
+    <string name="map_api_key_debug">0QvjonKAPqu1JRrQz3D7Rfl51x5vK8kS5PiLkTQ</string> -->  
+
+    <!-- RemoteJoystick Release
+    <string name="map_api_key_debug">0QvjonKAPqu1CvxcEEcnQbdsxUmPTewEqbkMaSg</string> -->
+
+    <!-- RemoteJoystick Google Play Release -->
+    <string name="map_api_key_debug">0FCEKIy1Q57W2uMZr_JP_VorwcABtvK-_CF-9dw</string>
+    <string name="connections">Connections</string>
+
+
+    <string name="title_section1">Joystick</string>
+    <string name="title_section2">Settings</string>
+    <string name="title_section3">About</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_example">Example action</string>
+    <string name="action_settings">Settings</string>
+</resources>
