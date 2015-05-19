@@ -2,6 +2,7 @@ package com.snt.RemoteJoystick.ui;
 
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,13 +50,20 @@ public class JoystickFragment extends BaseFragment
     int sentStickValue;
     boolean brakeToggle;
 
+
+    //user recently
+    int actionDuration;
+    int speedLimit;
+    int speedLimitEnabled;
+    int spookyEnabled;
+    int noThrottleEnabled;
+
+
     int sequenceNumber;
     int brakeCommand;
     int remoteOn;
     int autoBrake;
     int brakeMode;
-    int speedLimit;
-    int speedLimitEnabled;
     int timeout;
     int scenario;
     long last_updated;
@@ -67,38 +75,49 @@ public class JoystickFragment extends BaseFragment
     private final int CONTROL_COMMAND = 101;
     private final int ENABLED = 1;
     private final int DISABLE = 0;
-    private final int NO_SCENARIO = 0;
-    private final int SPOOKY_SCENARIO = 1;
-    private final int HARD_SPEED_LIMIT = 5;
+    private final int HARD_SPEED_LIMIT = 10;
 
-    //This means if current value differs THROTTLE_FILTER_PERCENTAGE % to previous value
-    //the new value will be sent to the car
-    private int THROTTLE_FILTER_PERCENTAGE = 50;
+    private final int CMD_CONTROL = 101;
+
+    private final int SUB_CMD_RESET = 0;
+    private final int SUB_CMD_SPOOKY = 1;
+    private final int SUB_CMD_NO_THROTTLE = 2;
+    private final int SUB_CMD_FORWARD = 3;
+    private final int SUB_CMD_REVERSE = 4;
+    private final int SUB_CMD_SPEED_LIMIT = 5;
+    private final int SUB_CMD_GET_STATE = 6;
 
 
     private ImageButton button_stop;
-    private CheckBox checkbox_autobrake;
-    private CheckBox checkBox_speedLimit;
-    private NumberPicker numberPicker_speedlimit;
+
+    private ImageButton btnGoForward;
+    private ImageButton btnGoReverse;
+
+    private ImageButton btnLimitSpeed;
+    private ImageButton btnSpookyMode;
+
+    private ImageButton btnResetCar;
+    private ImageButton btnNoThrottle;
+
+    private NumberPicker pickerSpeedLimit;
+    private NumberPicker pickerDuration;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        newStickValue = 0;
-        sentStickValue = 0;
-        brakeToggle = false;
+        actionDuration = 1;
+        speedLimit = HARD_SPEED_LIMIT;
+        speedLimitEnabled = DISABLE;
+        spookyEnabled = DISABLE;
+        noThrottleEnabled = DISABLE;
 
-        sequenceNumber = 0;
-        brakeCommand = 0;
         remoteOn = 0;
         autoBrake = 1;
-        speedLimit = HARD_SPEED_LIMIT;
-        speedLimitEnabled = 0;
         timeout = 100;
         last_updated = -30000;
 
-        scenario = NO_SCENARIO;
+        //scenario = NO_SCENARIO;
 
 //        getActivity().setRequestedOrientation(
 //                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
@@ -110,34 +129,61 @@ public class JoystickFragment extends BaseFragment
 
         ToggleButton button_on_off = (ToggleButton) joystickView.findViewById(R.id.toggleButton);
         button_stop = (ImageButton) joystickView.findViewById(R.id.imageButtonStop);
-        checkbox_autobrake = (CheckBox) joystickView.findViewById(R.id.checkBoxAutoBrake);
-        checkBox_speedLimit = (CheckBox) joystickView.findViewById(R.id.checkBoxSpeedLimit);
-        numberPicker_speedlimit = (NumberPicker) joystickView.findViewById(R.id.numberPicker);
 
-        button_on_off.setOnCheckedChangeListener(onOffToggleListener);
-        button_stop.setOnClickListener(this);
-        checkbox_autobrake.setOnCheckedChangeListener(checkboxChangeLister);
-        checkBox_speedLimit.setOnCheckedChangeListener(checkboxChangeLister);
-        numberPicker_speedlimit.setOnValueChangedListener(numberPickerChangeListener);
+
+
+        //Get reference to buttons
+        btnGoForward = (ImageButton)joystickView.findViewById(R.id.btn_forward);
+        btnGoReverse = (ImageButton)joystickView.findViewById(R.id.btn_reverse);
+
+        btnLimitSpeed = (ImageButton)joystickView.findViewById(R.id.btn_speed_limit);
+        btnSpookyMode = (ImageButton) joystickView.findViewById(R.id.btn_spooky);
+
+        btnResetCar = (ImageButton) joystickView.findViewById(R.id.btn_reset);
+        btnNoThrottle = (ImageButton) joystickView.findViewById(R.id.btn_no_throttle);
+
+
+        //Set onclick listeners for buttons
+        btnGoForward.setOnClickListener(this);
+        btnGoReverse.setOnClickListener(this);
+        btnLimitSpeed.setOnClickListener(this);
+        btnSpookyMode.setOnClickListener(this);
+        btnResetCar.setOnClickListener(this);
+        btnNoThrottle.setOnClickListener(this);
+
+
+        //button_on_off.setOnCheckedChangeListener(onOffToggleListener);
+        //button_stop.setOnClickListener(this);
+
+        //Get reference to pickers
+        pickerSpeedLimit = (NumberPicker) joystickView.findViewById(R.id.picker_speed);
+        pickerDuration = (NumberPicker) joystickView.findViewById(R.id.picker_duration);
+
+        //Set picker listeners
+        pickerDuration.setOnValueChangedListener(numberPickerChangeListener);
+        pickerSpeedLimit.setOnValueChangedListener(numberPickerChangeListener);
 
         // Populate the numberpicker
-        numberPicker_speedlimit.setMaxValue(80);
-        numberPicker_speedlimit.setMinValue(0);
-        numberPicker_speedlimit.setValue(HARD_SPEED_LIMIT);
-        numberPicker_speedlimit.setWrapSelectorWheel(false);
+        pickerSpeedLimit.setMaxValue(80);
+        pickerSpeedLimit.setMinValue(0);
+        pickerSpeedLimit.setValue(HARD_SPEED_LIMIT);
+        pickerSpeedLimit.setWrapSelectorWheel(false);
+
+        pickerDuration.setMaxValue(50);
+        pickerDuration.setMinValue(1);
+        pickerDuration.setValue(1);
+        pickerDuration.setWrapSelectorWheel(false);
 
         //Set states
-        numberPicker_speedlimit.setEnabled(false);
-        checkbox_autobrake.setChecked(true);
-        checkbox_autobrake.setEnabled(false);
-        checkBox_speedLimit.setChecked(true);
-        checkBox_speedLimit.setEnabled(false);
+        pickerSpeedLimit.setEnabled(true);
+        pickerDuration.setEnabled(true);
 
-        disc = (ImageView) joystickView.findViewById(R.id.imageView);
-        disc.setOnTouchListener(joystickMotionListener);
+        //disc = (ImageView) joystickView.findViewById(R.id.imageView);
+        //disc.setOnTouchListener(joystickMotionListener);
 
         // Center the joystick
 
+        /*
         ViewTreeObserver vto = joystickView.getViewTreeObserver();
 
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -157,9 +203,9 @@ public class JoystickFragment extends BaseFragment
                 }
             }
         });
-
+*/
         // Populate the spinner with scenarios
-
+        /*
         Spinner spinner = (Spinner) joystickView.findViewById(R.id.spinner);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
@@ -167,8 +213,9 @@ public class JoystickFragment extends BaseFragment
                 getResources().getStringArray(R.array.scenarios_array));
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(scenarioSelectedHandler);
+        */
 
-        controlMessageHandler.postDelayed(controlMessageRunnable,1000);
+        //controlMessageHandler.postDelayed(controlMessageRunnable,1000);
 
         // Populate listview with initial values
 
@@ -195,89 +242,130 @@ public class JoystickFragment extends BaseFragment
     }
 
     private void setListViewValue(int pos, String value) {
-        ((Map<String, String>)listAdapter.getItem(pos)).put("value",value);
+        ((Map<String, String>) listAdapter.getItem(pos)).put("value", value);
     }
+
 
     /**
-     * Defines the joystick value, and send the control message if it differs by
-     * at least 80 points of percentage from the last value sent
-     * @param value The new value
+     * This method disables Throttle pedal
      */
-    private void setStickValue(int value) {
+    protected void setNoThrottle(int noThrottle){
 
 
-        //Log.d("throttle", String.valueOf(value));
-        newStickValue = value;
-        /*
-        if (Math.abs(newStickValue - sentStickValue) > THROTTLE_FILTER_PERCENTAGE
-                || (newStickValue == 0 && sentStickValue != 0) ) {
-            sendControlMessage();
-        }
-        */
-        if(sentStickValue != 0 && newStickValue == 0){
-            sendControlMessage();
-        }
+        String msg = String.format("%d,%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_NO_THROTTLE,
+                noThrottle);
 
+        sendControlMessage(msg);
     }
-
 
     /**
      * This method stops the remote agent and resets everything to normal
      */
-    protected void sendStopRemoteAgent(){
-        newStickValue = 0;
-        brakeCommand = 0;
-        sequenceNumber = 0;
-        autoBrake = 0;
-        brakeMode = 0;
-        remoteOn = 0;
-        speedLimit = 0;
-        speedLimitEnabled = 0;
-        timeout = 0;
-        scenario = 0;
-        sendControlMessage();
+    protected void stopRemoteAgent(){
+
+
+        String msg = String.format("%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_RESET);
+
+        sendControlMessage(msg);
+    }
+
+    /**
+     * This method enable or disables spooky mode
+     * @param enabled enable or disable
+     * @param interval_duration spooky interval in each direction in seconds
+     *
+     */
+    protected void setSpookyMode(int enabled, float interval_duration){
+
+        int intervalCorrected = (int)(interval_duration*10);
+
+        String msg = String.format("%d,%d,%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_SPOOKY,
+                enabled,
+                intervalCorrected);
+
+        sendControlMessage(msg);
+    }
+
+    /**
+     * This method enable or disables spooky mode
+     * @param speed speed limit
+     * @param intervalDuration spooky interval in each direction in seconds
+     *
+     */
+    protected void goForward(int speed, float intervalDuration){
+
+        String msg = String.format("%d,%d,%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_FORWARD,
+                validateSpeed(speed),
+                correctTimeInterval(intervalDuration));
+
+        sendControlMessage(msg);
+    }
+
+
+    /**
+     * This method enable or disables spooky mode
+     * @param speed limit
+     * @param intervalDuration spooky interval in each direction in seconds
+     *
+     */
+    protected void goReverse(int speed, float intervalDuration){
+
+        String msg = String.format("%d,%d,%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_REVERSE,
+                validateSpeed(speed),
+                correctTimeInterval(intervalDuration));
+
+        sendControlMessage(msg);
+    }
+
+    /**
+     * This method enable or disables spooky mode
+     * @param enabled limit
+     * @param speedLimit spooky interval in each direction in seconds
+     *
+     */
+    protected void setSpeedLimit(int enabled, int speedLimit){
+
+        String msg = String.format("%d,%d,%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_SPEED_LIMIT,
+                enabled,
+                validateSpeed(speedLimit));
+
+        sendControlMessage(msg);
+    }
+
+
+    /**
+     * This method asks for car status
+     */
+    protected void askForStatusUpdate(){
+
+        String msg = String.format("%d,%d",
+                CMD_CONTROL,
+                SUB_CMD_GET_STATE);
+
+        sendControlMessage(msg);
     }
 
     /**
      * Formats and sends a message containing throttle and brake commands with a sequence number
      * The brakeCommand indicator values are 1: set brakes, 2: disable brakes, 0: no action
      */
-    protected void sendControlMessage() {
-        String msg = "101,0,0,0,0";
-        /**
-         * 101 command parameters in order are
-         * Forward Throttle
-         * Backward Throttle
-         * Break Enable
-         * Sequence Number
-         * Brake Mode
-         * Remote Agent Enable
-         * SpeedLimit
-         * SpeedLimit Enable
-         * Timeout
-         * Scenario
-         */
-
-        // Always set throttle to zero if brake is on
-        if(brakeCommand == ENABLED){
-            newStickValue = 0;
-        }
-
-        msg = String.format("101,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
-                newStickValue > 0 ? newStickValue : 0,
-                newStickValue < 0 ? Math.abs(newStickValue) : 0,
-                (brakeCommand == ENABLED ? ENABLED : DISABLE),
-                sequenceNumber,
-                brakeMode,/*brake mode*/
-                remoteOn,
-                speedLimit,
-                speedLimitEnabled,
-                timeout,
-                scenario);
-
-        sequenceNumber = (sequenceNumber + 1) % 100;
+    protected void sendControlMessage(String msg) {
 
         sendCommand("Control", msg, this);
+
+        /*
         sentStickValue = newStickValue;
 
         long delta = (System.currentTimeMillis()-last_updated)/1000;
@@ -290,7 +378,30 @@ public class JoystickFragment extends BaseFragment
         else {
             ((ImageView)joystickView.findViewById(R.id.image_connection)).setImageResource(R.drawable.connection_good);
         }
+        */
 
+    }
+
+    /**
+     * Formats and sends a message containing throttle and brake commands with a sequence number
+     * The brakeCommand indicator values are 1: set brakes, 2: disable brakes, 0: no action
+     */
+    protected int correctTimeInterval(float intervalSeconds) {
+
+        return (int)(intervalSeconds*1);
+
+    }
+
+
+    /**
+     * Set max speed to hard speed limit or speed if it's lower
+     */
+    protected int validateSpeed(int speed) {
+
+        if(speed>=HARD_SPEED_LIMIT)
+            return HARD_SPEED_LIMIT;
+        else
+            return speed;
     }
 
     /**
@@ -385,19 +496,19 @@ public class JoystickFragment extends BaseFragment
     /**
      * Thread sending a control message periodically
      */
+    /*
     private final Runnable controlMessageRunnable = new Runnable() {
         public void run() {
             sendControlMessage();
             controlMessageHandler.postDelayed(this,2000); // periodicity in ms
         }
     };
+    */
 
     @Override
     public void onPause() {
         super.onPause();
-        //brakeCommand = 1;
-        //sendControlMessage();
-        sendStopRemoteAgent();
+        stopRemoteAgent();
         // TODO: STAHP EVERYTHING
         // Another activity is taking focus (this activity is about to be "paused").
 
@@ -410,22 +521,11 @@ public class JoystickFragment extends BaseFragment
     @Override
     public void onStop() {
         super.onStop();
-        //brakeCommand = 1;
-        //sendControlMessage();
         // TODO: STAHP EVERYTHING
         // The activity is no longer visible (it is now "stopped")
-        sendStopRemoteAgent();
+        stopRemoteAgent();
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        //brakeCommand = 1;
-        //sendControlMessage();
-        // TODO: STAHP EVERYTHING
-        // The activity is about to be destroyed.
-        sendStopRemoteAgent();
-    }
 
     @Override
     public void onResume() {
@@ -470,8 +570,11 @@ public class JoystickFragment extends BaseFragment
                 @Override
                 public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                     switch (picker.getId()) {
-                        case R.id.numberPicker:
+                        case R.id.picker_speed:
                             speedLimit = newVal;
+                            break;
+                        case R.id.picker_duration:
+                            actionDuration = newVal;
                             break;
                     }
                 }
@@ -480,6 +583,7 @@ public class JoystickFragment extends BaseFragment
     /**
      * Listener for the checkboxes
      */
+    /*
     private CompoundButton.OnCheckedChangeListener checkboxChangeLister =
             new CompoundButton.OnCheckedChangeListener() {
                 @Override
@@ -494,10 +598,12 @@ public class JoystickFragment extends BaseFragment
                     }
                 }
             };
+    */
 
     /**
      * Listener for the scenario dropdown list
      */
+    /*
     private AdapterView.OnItemSelectedListener scenarioSelectedHandler =
             new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -521,7 +627,7 @@ public class JoystickFragment extends BaseFragment
                 }
             };
 
-
+    */
 
     /**
      * Called when a view has been clicked
@@ -529,7 +635,11 @@ public class JoystickFragment extends BaseFragment
      */
     @Override
     public void onClick(View v) {
+        actionDuration = pickerDuration.getValue();
+        speedLimit = pickerSpeedLimit.getValue();
+
         switch (v.getId()) {
+            /*
             case R.id.imageButtonStop:
                 if (scenario != NO_SCENARIO) {
                     scenario = NO_SCENARIO;
@@ -552,6 +662,45 @@ public class JoystickFragment extends BaseFragment
                     }
                 }
                 break;
+*/
+            case R.id.btn_forward:
+                goForward(pickerSpeedLimit.getValue(), actionDuration);
+                break;
+            case R.id.btn_reverse:
+                goReverse(pickerSpeedLimit.getValue(), actionDuration);
+                break;
+            case R.id.btn_speed_limit:
+                if(speedLimitEnabled == ENABLED) {
+                    setSpeedLimit(DISABLE, 0);
+                    speedLimitEnabled = DISABLE;
+                }
+                else{
+                    setSpeedLimit(ENABLED, speedLimit);
+                    speedLimitEnabled = ENABLED;
+                }
+                break;
+            case R.id.btn_spooky:
+                if(spookyEnabled == DISABLE){
+                    setSpookyMode(ENABLED, actionDuration);
+                    spookyEnabled = ENABLED;
+                } else {
+                    setSpookyMode(DISABLE, actionDuration);
+                    spookyEnabled = DISABLE;
+                }
+                break;
+            case R.id.btn_reset:
+                stopRemoteAgent();
+                spookyEnabled = DISABLE;
+                speedLimitEnabled = DISABLE;
+
+                break;
+            case R.id.btn_no_throttle:
+                if(noThrottleEnabled==DISABLE) {
+                    setNoThrottle(ENABLED);
+                    noThrottleEnabled = ENABLED;
+                }
+                break;
+
         }
     }
 
@@ -573,43 +722,4 @@ public class JoystickFragment extends BaseFragment
                 }
             };
 
-    /**
-     * Called when the joystick is touched
-     */
-    private View.OnTouchListener joystickMotionListener =
-            new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) v.getLayoutParams();
-                    int[] coord = new int [2];
-                    joystickView.getLocationOnScreen(coord);
-                    int yOffset = coord[1];
-                    int correctedY = 0, relativeY = 0;
-                    int maxHeight = joystickView.getHeight();
-                    int radius = disc.getHeight()/2;
-
-                    switch (event.getAction())
-                    {
-                        case MotionEvent.ACTION_MOVE:
-                            relativeY = (int) event.getRawY() - yOffset;
-                            correctedY = (int) (relativeY + radius > maxHeight * 0.9 ?
-                                    maxHeight * 0.9 - radius : (relativeY - radius < maxHeight * 0.1 ?
-                                    maxHeight * 0.1 + radius : relativeY));
-
-                            params.topMargin = correctedY - radius;
-                            setStickValue((int)((correctedY-maxHeight*0.1-radius)*200/(maxHeight*0.8-2*radius)-100)*-1);
-
-                            disc.setLayoutParams(params);
-                            break;
-
-                        case MotionEvent.ACTION_UP:
-                            params.topMargin = maxHeight/2 - radius;
-                            disc.setLayoutParams(params);
-                            setStickValue(0);
-                            break;
-                    }
-
-                    return true;
-                }
-            };
 }
