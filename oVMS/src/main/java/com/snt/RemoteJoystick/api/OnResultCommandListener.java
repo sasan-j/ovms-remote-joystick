@@ -1,5 +1,5 @@
 package com.snt.RemoteJoystick.api;
 
-public interface OnResultCommandListenner {
+public interface OnResultCommandListener {
 	public void onResultCommand(String[] result);
 }

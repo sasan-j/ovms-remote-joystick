@@ -2,8 +2,9 @@ package com.snt.RemoteJoystick.utils;
 
 //Copyright (c) 1999-2004 Brian Wellington (bwelling@xbill.org)
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import java.security.*;
 
 /**
 * A pure java implementation of the HMAC-MD5 secure hash algorithm

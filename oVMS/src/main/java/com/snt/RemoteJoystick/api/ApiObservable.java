@@ -1,13 +1,13 @@
 package com.snt.RemoteJoystick.api;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
-
 import android.os.Handler;
 import android.os.Message;
 
 import com.snt.RemoteJoystick.entities.CarData;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ApiObservable {
 	private static ApiObservable sInstance;

@@ -26,15 +26,15 @@ public class BaseFragmentActivity extends ApiActivity {
 		pContext.startActivity(intent);
 	}
 	
-//	public static void showForResult(Fragment pFragment, Class<? extends Fragment> pClazz,
-//			Bundle pArgs, int pRequestCode, int pOnlyOrientation) {
-//		Intent intent = new Intent(pFragment.getActivity(), BaseFragmentActivity.class);
-//		intent.putExtra(EXT_FRAGMENT_CLASS_NAME, pClazz.getName());
-//		intent.putExtra(EXT_ONLY_ORIENTATION, pOnlyOrientation);
-//		intent.putExtra(EXT_FOR_RESULT, true);
-//		if (pArgs != null) intent.putExtras(pArgs);
-//		pFragment.startActivityForResult(intent, pRequestCode);
-//	}
+	public static void showForResult(Fragment pFragment, Class<? extends Fragment> pClazz,
+			Bundle pArgs, int pRequestCode, int pOnlyOrientation) {
+		Intent intent = new Intent(pFragment.getActivity(), BaseFragmentActivity.class);
+		intent.putExtra(EXT_FRAGMENT_CLASS_NAME, pClazz.getName());
+		intent.putExtra(EXT_ONLY_ORIENTATION, pOnlyOrientation);
+		intent.putExtra(EXT_FOR_RESULT, true);
+		if (pArgs != null) intent.putExtras(pArgs);
+		pFragment.startActivityForResult(intent, pRequestCode);
+	}
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -47,7 +47,7 @@ public class BaseFragmentActivity extends ApiActivity {
         }
         
         int orientation = getIntent().getIntExtra(EXT_ONLY_ORIENTATION, Configuration.ORIENTATION_UNDEFINED);
-        if (orientation != Configuration.ORIENTATION_UNDEFINED && orientation !=  
+        if (orientation != Configuration.ORIENTATION_UNDEFINED && orientation !=
     			getResources().getConfiguration().orientation) {
         	finish();
         	return;
@@ -72,25 +72,25 @@ public class BaseFragmentActivity extends ApiActivity {
 	}
 	
 
-//	public Fragment setStartFragment(Class<? extends Fragment> pClazz) {
-//        return setStartFragment(pClazz, getIntent().getExtras());
-//	}
+	public Fragment setStartFragment(Class<? extends Fragment> pClazz) {
+        return setStartFragment(pClazz, getIntent().getExtras());
+	}
 	
 	public Fragment setStartFragment(String pClassName) {
         return setStartFragment(pClassName, getContentId(), getIntent().getExtras());
 	}
 	
-//	public Fragment setStartFragment(Class<? extends Fragment> pClazz, int pId) {
-//        return setStartFragment(pClazz, pId, getIntent().getExtras());
-//	}
+	public Fragment setStartFragment(Class<? extends Fragment> pClazz, int pId) {
+        return setStartFragment(pClazz, pId, getIntent().getExtras());
+	}
 
-//	public Fragment setStartFragment(Class<? extends Fragment> pClazz, Bundle pArgs) {
-//		return setStartFragment(pClazz, getContentId(), pArgs);
-//	}
+	public Fragment setStartFragment(Class<? extends Fragment> pClazz, Bundle pArgs) {
+		return setStartFragment(pClazz, getContentId(), pArgs);
+	}
 	
-//	public Fragment setStartFragment(Class<? extends Fragment> pClazz, int pId, Bundle pArgs) {
-//		return setStartFragment(pClazz.getName(), pId, pArgs);
-//	}
+	public Fragment setStartFragment(Class<? extends Fragment> pClazz, int pId, Bundle pArgs) {
+		return setStartFragment(pClazz.getName(), pId, pArgs);
+	}
 	
 	public Fragment setStartFragment(String pClassName, int pId, Bundle pArgs) {
 		FragmentManager fm = getSupportFragmentManager();
@@ -110,32 +110,32 @@ public class BaseFragmentActivity extends ApiActivity {
 		return fragment;
 	}
 	
-//	public Fragment replaceFragment(Class<? extends Fragment> pClazz, int pId, Bundle pArgs) {
-//		return replaceFragment(pClazz.getName(), pId, pArgs);
-//	}
+	public Fragment replaceFragment(Class<? extends Fragment> pClazz, int pId, Bundle pArgs) {
+		return replaceFragment(pClazz.getName(), pId, pArgs);
+	}
 	
-//	public Fragment replaceFragment(String pClassName, int pId, Bundle pArgs) {
-//		FragmentManager fm = getSupportFragmentManager();
-//		FragmentTransaction ft = fm.beginTransaction();
-//
-//		Fragment fragment = Fragment.instantiate(this, pClassName, pArgs);
-//		ft.replace(pId, fragment);
-//		ft.commit();
-//		return fragment;
-//	}
+	public Fragment replaceFragment(String pClassName, int pId, Bundle pArgs) {
+		FragmentManager fm = getSupportFragmentManager();
+		FragmentTransaction ft = fm.beginTransaction();
+		
+		Fragment fragment = Fragment.instantiate(this, pClassName, pArgs);
+		ft.replace(pId, fragment);
+		ft.commit();
+		return fragment;
+	}
 	
-//	public Fragment setNextFragment(Class<? extends Fragment> pClazz) {
-//        return setNextFragment(pClazz, getIntent().getExtras());
-//	}
+	public Fragment setNextFragment(Class<? extends Fragment> pClazz) {
+        return setNextFragment(pClazz, getIntent().getExtras());
+	}
 	
-//	public Fragment setNextFragment(Class<? extends Fragment> pClazz, Bundle pArgs) {
-//		Fragment fragment = Fragment.instantiate(this, pClazz.getName(), pArgs);
-//        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-//        ft.replace(getContentId(), fragment);
-//        ft.addToBackStack(null);
-//        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-//        ft.commit();
-//        return fragment;
-//	}
+	public Fragment setNextFragment(Class<? extends Fragment> pClazz, Bundle pArgs) {
+		Fragment fragment = Fragment.instantiate(this, pClazz.getName(), pArgs);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(getContentId(), fragment);
+        ft.addToBackStack(null);
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+        ft.commit();
+        return fragment;
+	}
 	
 }

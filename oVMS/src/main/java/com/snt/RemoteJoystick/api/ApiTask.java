@@ -1,5 +1,15 @@
 package com.snt.RemoteJoystick.api;
 
+import android.content.Context;
+import android.os.AsyncTask;
+import android.util.Base64;
+import android.util.Log;
+
+import com.snt.RemoteJoystick.BaseApp;
+import com.snt.RemoteJoystick.R;
+import com.snt.RemoteJoystick.entities.CarData;
+import com.snt.RemoteJoystick.entities.CarData.DataStale;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -17,16 +27,6 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 
-import android.content.Context;
-import android.os.AsyncTask;
-import android.util.Base64;
-import android.util.Log;
-
-import com.snt.RemoteJoystick.BaseApp;
-import com.snt.RemoteJoystick.R;
-import com.snt.RemoteJoystick.entities.CarData;
-import com.snt.RemoteJoystick.entities.CarData.DataStale;
-
 public class ApiTask extends AsyncTask<Void, Object, Void> {
 	private static final String TAG = "ApiTask";
 	private Socket mSocket;
@@ -38,7 +38,7 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 	private final CarData mCarData;
 	private final OnUpdateStatusListener mListener;
 	private final Random sRnd = new Random();
-	private boolean isShuttingDown = true;
+	private boolean isShuttingDown = false;
 
 	private enum MsgType {
 		msgUpdate, msgError, msgCommand, msgLoginBegin, msgLoginComplete
@@ -80,43 +80,62 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 
 	@Override
 	protected Void doInBackground(Void... params) {
-		try {
-			connInit();
+		String rx, msg;
 
-			String rx, msg;
-			while (mSocket.isConnected()) {
-				// if (Inputstream.ready()) {
-				rx = mInputstream.readLine().trim();
-				msg = new String(mRxCipher.update(Base64.decode(rx, 0))).trim();
-				Log.d(TAG, String.format("RX: %s (%s)", msg, rx));
-
-				if (msg.substring(0, 5).equals("MP-0 ")) {
-					handleMessage(msg.substring(5));
-				} else {
-					Log.d(TAG, "Unknown protection scheme");
-					// short pause after receiving message
-				}
-				
-				try {
-					Thread.sleep(100, 0);
-				} catch (InterruptedException e) {}
-			}
-		} catch (SocketException e) {
-			// connection lost, attempt to reconnect
+		while (!isShuttingDown) {
 			try {
-				mSocket.close();
-				mSocket = null;
-			} catch (Exception ex) {
-			}
-			if (!isShuttingDown)
+				// (re-)open socket connection
 				connInit();
-		} catch (IOException e) {
-			e.printStackTrace();
-			publishProgress(MsgType.msgError, e);
-		} catch (Exception e) {
-			e.printStackTrace();
+
+				while (mSocket.isConnected()) {
+					// read & decrypt message
+					rx = mInputstream.readLine().trim();
+					msg = new String(mRxCipher.update(Base64.decode(rx, 0))).trim();
+					Log.d(TAG, String.format("RX: %s (%s)", msg, rx));
+
+					if (msg.substring(0, 5).equals("MP-0 ")) {
+						// is valid message (for protocol version 0):
+						handleMessage(msg.substring(5));
+					} else {
+						Log.d(TAG, "Unknown protection scheme");
+						// sleep for 100 ms to prevent DoS by invalid data
+						try {
+							Thread.sleep(100);
+						} catch (InterruptedException e) {
+							// ignore
+						}
+					}
+				}
+
+				// reconnect if not shutting down:
+				continue;
+
+			} catch (SocketException e) {
+				// connection lost, attempt to reconnect
+				try {
+					mSocket.close();
+					mSocket = null;
+				} catch (Exception ex) {
+					// ignore
+				}
+				continue;
+
+			} catch (IOException e) {
+				// reader closed or I/O error
+				e.printStackTrace();
+				publishProgress(MsgType.msgError, e);
+				break;
+
+			} catch (Exception e) {
+				// other error
+				e.printStackTrace();
+				publishProgress(MsgType.msgError, e);
+				break;
+
+			}
 		}
 
+		Log.d(TAG, "Terminating AsyncTask");
 		return null;
 	}
 	
@@ -210,7 +229,7 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 				Log.d(TAG, String.format(
 						"Server authentication failed. Expected %s Got %s",
 						Base64.encodeToString(client_hmac
-								.doFinal(serverWelcomeMsg[2].getBytes()),
+										.doFinal(serverWelcomeMsg[2].getBytes()),
 								Base64.NO_WRAP), serverWelcomeMsg[3]));
 			} else {
 				Log.d(TAG, "Server authentication OK.");
@@ -336,32 +355,32 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 			if (dataParts.length >= 8) {
 				Log.v(TAG, "S MSG Validated");
 				mCarData.car_soc_raw = Integer.parseInt(dataParts[0]);
-				mCarData.car_soc = String.format("%d%%",mCarData.car_soc_raw);
+				mCarData.car_soc = String.format("%d%%", mCarData.car_soc_raw);
 				mCarData.car_distance_units_raw = dataParts[1].toString();
 				mCarData.car_distance_units = (mCarData.car_distance_units_raw.equals("M"))?"m":"km";
 				mCarData.car_speed_units = (mCarData.car_distance_units_raw.equals("M"))
 						?mContext.getText(R.string.mph).toString()
 						:mContext.getText(R.string.kph).toString();
 				mCarData.car_charge_linevoltage_raw = Integer.parseInt(dataParts[2]);
-				mCarData.car_charge_linevoltage = String.format("%d%s", mCarData.car_charge_linevoltage_raw,"V");
+				mCarData.car_charge_linevoltage = String.format("%d%s", mCarData.car_charge_linevoltage_raw, "V");
 				mCarData.car_charge_current_raw = Integer.parseInt(dataParts[3]);
-				mCarData.car_charge_current = String.format("%d%s",mCarData.car_charge_current_raw,"A");
+				mCarData.car_charge_current = String.format("%d%s", mCarData.car_charge_current_raw, "A");
 				mCarData.car_charge_voltagecurrent = String.format("%d%s %d%s",
-						mCarData.car_charge_linevoltage_raw,"V",
-						mCarData.car_charge_current_raw,"A");
+						mCarData.car_charge_linevoltage_raw, "V",
+						mCarData.car_charge_current_raw, "A");
 				mCarData.car_charge_state_s_raw = dataParts[4].toString();
 				mCarData.car_charge_state = mCarData.car_charge_state_s_raw;
 				mCarData.car_mode_s_raw = dataParts[5].toString();
 				mCarData.car_charge_mode = mCarData.car_mode_s_raw;
 				mCarData.car_range_ideal_raw = Integer.parseInt(dataParts[6]);
-				mCarData.car_range_ideal = String.format("%d%s",mCarData.car_range_ideal_raw,mCarData.car_distance_units);
+				mCarData.car_range_ideal = String.format("%d%s", mCarData.car_range_ideal_raw, mCarData.car_distance_units);
 				mCarData.car_range_estimated_raw = Integer.parseInt(dataParts[7]);
-				mCarData.car_range_estimated = String.format("%d%s",mCarData.car_range_estimated_raw,mCarData.car_distance_units);
+				mCarData.car_range_estimated = String.format("%d%s", mCarData.car_range_estimated_raw, mCarData.car_distance_units);
 				mCarData.stale_status = DataStale.Good;
 			}
 			if (dataParts.length >= 15) {
 				mCarData.car_charge_currentlimit_raw = Integer.parseInt(dataParts[8]);
-				mCarData.car_charge_currentlimit = String.format("%d%s",mCarData.car_charge_currentlimit_raw,"A");
+				mCarData.car_charge_currentlimit = String.format("%d%s", mCarData.car_charge_currentlimit_raw, "A");
 				mCarData.car_charge_duration_raw = Integer.parseInt(dataParts[9]);
 				mCarData.car_charge_b4byte_raw = Integer.parseInt(dataParts[10]);
 				mCarData.car_charge_kwhconsumed = Integer.parseInt(dataParts[11]);
@@ -385,6 +404,25 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 			}
 			if (dataParts.length >= 19) {
 				mCarData.car_CAC = Double.parseDouble(dataParts[18]);
+			}
+			if (dataParts.length >= 27) {
+				mCarData.car_chargefull_minsremaining = Integer.parseInt(dataParts[19]);
+				mCarData.car_chargelimit_minsremaining = Integer.parseInt(dataParts[20]);
+				mCarData.car_chargelimit_rangelimit_raw = Integer.parseInt(dataParts[21]);
+				mCarData.car_chargelimit_rangelimit = String.format("%d%s",
+						mCarData.car_chargelimit_rangelimit_raw, mCarData.car_distance_units);
+				mCarData.car_chargelimit_soclimit = Integer.parseInt(dataParts[22]);
+				mCarData.car_coolingdown = Integer.parseInt(dataParts[23]);
+				mCarData.car_cooldown_tbattery = Integer.parseInt(dataParts[24]);
+				mCarData.car_cooldown_timelimit = Integer.parseInt(dataParts[25]);
+				mCarData.car_chargeestimate = Integer.parseInt(dataParts[26]);
+			}
+			if (dataParts.length >= 30) {
+				mCarData.car_chargelimit_minsremaining_range = Integer.parseInt(dataParts[27]);
+				mCarData.car_chargelimit_minsremaining_soc = Integer.parseInt(dataParts[28]);
+				mCarData.car_max_idealrange_raw = Integer.parseInt(dataParts[29]);
+				mCarData.car_max_idealrange = String.format("%d%s",
+						mCarData.car_max_idealrange_raw, mCarData.car_distance_units);
 			}
 
 			Log.v(TAG, "Notify Vehicle Status Update: " + mCarData.sel_vehicleid);
@@ -458,23 +496,23 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 				mCarData.car_temp_battery_raw = Integer.parseInt(dataParts[5]);
 				if (mCarData.car_distance_units_raw.equals("M"))
 					{
-					mCarData.car_temp_pem = String.format("%.0f\u00B0F",(mCarData.car_temp_pem_raw*(9.0/5.0))+32.0);
-					mCarData.car_temp_motor = String.format("%.0f\u00B0F",(mCarData.car_temp_motor_raw*(9.0/5.0))+32.0);
-					mCarData.car_temp_battery = String.format("%.0f\u00B0F",(mCarData.car_temp_battery_raw*(9.0/5.0))+32.0);
+					mCarData.car_temp_pem = String.format("%.0f\u00B0F", (mCarData.car_temp_pem_raw * (9.0 / 5.0)) + 32.0);
+					mCarData.car_temp_motor = String.format("%.0f\u00B0F", (mCarData.car_temp_motor_raw * (9.0 / 5.0)) + 32.0);
+					mCarData.car_temp_battery = String.format("%.0f\u00B0F", (mCarData.car_temp_battery_raw * (9.0 / 5.0)) + 32.0);
 					}
 				else
 					{
-					mCarData.car_temp_pem = String.format("%d\u00B0C",mCarData.car_temp_pem_raw);
-					mCarData.car_temp_motor = String.format("%d\u00B0C",mCarData.car_temp_motor_raw);
-					mCarData.car_temp_battery = String.format("%d\u00B0C",mCarData.car_temp_battery_raw);
+					mCarData.car_temp_pem = String.format("%d\u00B0C", mCarData.car_temp_pem_raw);
+					mCarData.car_temp_motor = String.format("%d\u00B0C", mCarData.car_temp_motor_raw);
+					mCarData.car_temp_battery = String.format("%d\u00B0C", mCarData.car_temp_battery_raw);
 					}
 				
 				mCarData.car_tripmeter_raw = Integer.parseInt(dataParts[6]);
-				mCarData.car_tripmeter = String.format("%d%s",mCarData.car_tripmeter_raw,mCarData.car_distance_units);
+				mCarData.car_tripmeter = String.format("%.1f%s", (float) mCarData.car_tripmeter_raw / 10, mCarData.car_distance_units);
 				mCarData.car_odometer_raw = Integer.parseInt(dataParts[7]);
-				mCarData.car_odometer = String.format("%d%s",mCarData.car_odometer_raw,mCarData.car_distance_units);
+				mCarData.car_odometer = String.format("%.1f%s", (float) mCarData.car_odometer_raw / 10, mCarData.car_distance_units);
 				mCarData.car_speed_raw = Integer.parseInt(dataParts[8]);
-				mCarData.car_speed = String.format("%d%s", mCarData.car_speed_raw,mCarData.car_speed_units);
+				mCarData.car_speed = String.format("%d%s", mCarData.car_speed_raw, mCarData.car_speed_units);
 				
 				mCarData.stale_environment = DataStale.Good;
 
@@ -484,9 +522,9 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 
 					mCarData.car_temp_ambient_raw = Integer.parseInt(dataParts[10]);
 					if (mCarData.car_distance_units_raw.equals("M"))
-						mCarData.car_temp_ambient = String.format("%.0f\u00B0F",(mCarData.car_temp_ambient_raw*(9.0/5.0))+32.0);
+						mCarData.car_temp_ambient = String.format("%.0f\u00B0F", (mCarData.car_temp_ambient_raw * (9.0 / 5.0)) + 32.0);
 					else
-						mCarData.car_temp_ambient = String.format("%d\u00B0C",mCarData.car_temp_ambient_raw);
+						mCarData.car_temp_ambient = String.format("%d\u00B0C", mCarData.car_temp_ambient_raw);
 					
 					dataField = Integer.parseInt(dataParts[11]);
 					mCarData.car_doors3_raw =  dataField;
@@ -514,6 +552,12 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 					mCarData.car_doors4_raw = dataField;
 					mCarData.car_alarm_sounding = ((dataField & 0x02) == 0x02);
 				}
+				if (dataParts.length >= 18) {
+					mCarData.car_12vline_ref = Double.parseDouble(dataParts[16]);
+					dataField = Integer.parseInt(dataParts[17]);
+					mCarData.car_doors5_raw = dataField;
+					mCarData.car_charging_12v = ((dataField & 0x10) == 0x10);
+				}
 
 				publishProgress(MsgType.msgUpdate);
 			}
@@ -531,7 +575,7 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 				int car_gsmdbm = 0;
 				if (mCarData.car_gps_signal_raw <= 31)
 					car_gsmdbm = -113 + (mCarData.car_gps_signal_raw*2);
-				mCarData.car_gsm_signal = String.format("%d%s", car_gsmdbm," dbm");
+				mCarData.car_gsm_signal = String.format("%d%s", car_gsmdbm, " dbm");
 				if ((car_gsmdbm < -121)||(car_gsmdbm >= 0))
 					mCarData.car_gsm_bars = 0;
 				else if (car_gsmdbm < -107)
@@ -557,14 +601,14 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 
 			publishProgress(MsgType.msgUpdate);
 		}
-		case 'f': // RemoteJoystick Server Firmware
+		case 'f': // OVMS Server Firmware
 		{
 			String[] dataParts = cmd.split(",\\s*");
 			if (dataParts.length >= 1) {
 				Log.v(TAG, "f MSG Validated");
 				mCarData.server_firmware = dataParts[0].toString();
 
-				publishProgress(MsgType.msgUpdate);
+                publishProgress(MsgType.msgUpdate);
 			}
 			break;
 		}
@@ -581,23 +625,23 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 				mCarData.car_tpms_fl_t_raw = Double.parseDouble(dataParts[5]);
 				mCarData.car_tpms_rl_p_raw = Double.parseDouble(dataParts[6]);
 				mCarData.car_tpms_rl_t_raw = Double.parseDouble(dataParts[7]);
-				mCarData.car_tpms_fl_p = String.format("%.1f%s",mCarData.car_tpms_fl_p_raw, "psi"); 
-				mCarData.car_tpms_fr_p = String.format("%.1f%s",mCarData.car_tpms_fr_p_raw, "psi"); 
-				mCarData.car_tpms_rl_p = String.format("%.1f%s",mCarData.car_tpms_rl_p_raw, "psi"); 
-				mCarData.car_tpms_rr_p = String.format("%.1f%s",mCarData.car_tpms_rr_p_raw, "psi"); 
+				mCarData.car_tpms_fl_p = String.format("%.1f%s", mCarData.car_tpms_fl_p_raw, "psi");
+				mCarData.car_tpms_fr_p = String.format("%.1f%s", mCarData.car_tpms_fr_p_raw, "psi");
+				mCarData.car_tpms_rl_p = String.format("%.1f%s", mCarData.car_tpms_rl_p_raw, "psi");
+				mCarData.car_tpms_rr_p = String.format("%.1f%s", mCarData.car_tpms_rr_p_raw, "psi");
 				if (mCarData.car_distance_units_raw.equals("M"))
 					{
-					mCarData.car_tpms_fl_t = String.format("%.0f%s",(mCarData.car_tpms_fl_t_raw*(9.0/5.0))+32.0, "\u00B0F"); 
-					mCarData.car_tpms_fr_t = String.format("%.0f%s",(mCarData.car_tpms_fr_t_raw*(9.0/5.0))+32.0, "\u00B0F"); 
-					mCarData.car_tpms_rl_t = String.format("%.0f%s",(mCarData.car_tpms_rl_t_raw*(9.0/5.0))+32.0, "\u00B0F"); 
-					mCarData.car_tpms_rr_t = String.format("%.0f%s",(mCarData.car_tpms_rr_t_raw*(9.0/5.0))+32.0, "\u00B0F"); 
+					mCarData.car_tpms_fl_t = String.format("%.0f%s", (mCarData.car_tpms_fl_t_raw * (9.0 / 5.0)) + 32.0, "\u00B0F");
+					mCarData.car_tpms_fr_t = String.format("%.0f%s", (mCarData.car_tpms_fr_t_raw * (9.0 / 5.0)) + 32.0, "\u00B0F");
+					mCarData.car_tpms_rl_t = String.format("%.0f%s", (mCarData.car_tpms_rl_t_raw * (9.0 / 5.0)) + 32.0, "\u00B0F");
+					mCarData.car_tpms_rr_t = String.format("%.0f%s", (mCarData.car_tpms_rr_t_raw * (9.0 / 5.0)) + 32.0, "\u00B0F");
 					}
 				else
 					{
-					mCarData.car_tpms_fl_t = String.format("%.0f%s",mCarData.car_tpms_fl_t_raw, "\u00B0C"); 
-					mCarData.car_tpms_fr_t = String.format("%.0f%s",mCarData.car_tpms_fr_t_raw, "\u00B0C"); 
-					mCarData.car_tpms_rl_t = String.format("%.0f%s",mCarData.car_tpms_rl_t_raw, "\u00B0C"); 
-					mCarData.car_tpms_rr_t = String.format("%.0f%s",mCarData.car_tpms_rr_t_raw, "\u00B0C"); 
+					mCarData.car_tpms_fl_t = String.format("%.0f%s", mCarData.car_tpms_fl_t_raw, "\u00B0C");
+					mCarData.car_tpms_fr_t = String.format("%.0f%s", mCarData.car_tpms_fr_t_raw, "\u00B0C");
+					mCarData.car_tpms_rl_t = String.format("%.0f%s", mCarData.car_tpms_rl_t_raw, "\u00B0C");
+					mCarData.car_tpms_rr_t = String.format("%.0f%s", mCarData.car_tpms_rr_t_raw, "\u00B0C");
 					}
 				mCarData.car_stale_tpms_raw = Integer.parseInt(dataParts[8]);
 				if (mCarData.car_stale_tpms_raw < 0)
@@ -612,7 +656,10 @@ public class ApiTask extends AsyncTask<Void, Object, Void> {
 			break;
 		}
 		case 'a': {
-			Log.v(TAG, "Server acknowleged ping");
+			Log.v(TAG, "Server acknowledged ping");
+            //here I mimic the ping reply from the actual car, if we are going to need these
+            //two kind of pings at the same time we might need to change this.
+            publishProgress(MsgType.msgCommand, "105,0");
 			break;
 		}
 		case 'c': {

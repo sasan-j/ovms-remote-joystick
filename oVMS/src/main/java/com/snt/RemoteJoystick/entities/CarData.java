@@ -32,6 +32,7 @@ public class CarData implements Serializable {
 	public boolean car_chargeport_open = false;
 	public boolean car_pilot_present = false;
 	public boolean car_charging = false;
+	public boolean car_charging_12v = false;
 	public boolean car_handbrake_on = false;
 	public boolean car_started = false;
 	public boolean car_locked = false;
@@ -63,6 +64,7 @@ public class CarData implements Serializable {
 	public int car_gsm_bars = 0;
 	public String server_firmware = "";
 	public double car_12vline_voltage;
+	public double car_12vline_ref;
 	public DataStale stale_firmware = DataStale.NoValue;
 	public double car_CAC = 0.0;
 
@@ -79,6 +81,8 @@ public class CarData implements Serializable {
 	public String car_charge_time = "";
 	public String car_distance_units = "";
 	public String car_speed_units = "";
+	public String car_chargelimit_rangelimit = "";
+	public String car_max_idealrange = "";
 
 	public DataStale stale_chargetimer = DataStale.NoValue;
 	public DataStale stale_status = DataStale.NoValue;
@@ -113,6 +117,7 @@ public class CarData implements Serializable {
 	public int car_doors2_raw = 0;
 	public int car_doors3_raw = 0;
 	public int car_doors4_raw = 0;
+	public int car_doors5_raw = 0;
 	public int car_lockunlock_raw = 0;
 	public int car_temp_pem_raw = 0;
 	public int car_temp_motor_raw = 0;
@@ -147,6 +152,17 @@ public class CarData implements Serializable {
 	public int car_charge_timermode_raw = 0;
 	public int car_charge_timerstart_raw = 0;
 	public int car_stale_chargetimer_raw = -1;
+	public int car_chargefull_minsremaining = -1;
+	public int car_chargelimit_minsremaining = -1;
+	public int car_chargelimit_rangelimit_raw = 0;
+	public int car_chargelimit_soclimit = 0;
+	public int car_coolingdown = -1;
+	public int car_cooldown_tbattery = 0;
+	public int car_cooldown_timelimit = 0;
+	public int car_chargeestimate = -1;
+	public int car_chargelimit_minsremaining_range = -1;
+	public int car_chargelimit_minsremaining_soc = -1;
+	public int car_max_idealrange_raw = 0;
 
 	// Car Update Time Message "T"
 	public long car_lastupdate_raw = 0;

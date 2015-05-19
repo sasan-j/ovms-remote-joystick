@@ -16,7 +16,7 @@ import com.snt.RemoteJoystick.ui.utils.Ui;
 //import com.snt.RemoteJoystick.ui.witdet.SwitcherView;
 
 public class InfoFragment extends BaseFragment /*implements OnClickListener,
-		OnResultCommandListenner*/ {
+		OnResultCommandListener*/ {
 	private CarData mCarData;
 
     @Override

@@ -262,7 +262,7 @@ public class MainActivity extends ApiActivity implements
 			// check if tcp connection is still active (it may be closed as the
 			// user leaves the program)
 			ApiService service = getService();
-			if (service == null || !service.isLoggined())
+			if (service == null || !service.isLoggedIn())
 				return;
 
 			SharedPreferences settings = getSharedPreferences("C2DM", 0);

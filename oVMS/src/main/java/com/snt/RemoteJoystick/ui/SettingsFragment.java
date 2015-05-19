@@ -85,7 +85,7 @@ public class SettingsFragment extends BaseFragment implements
 
 	@Override
 	public void onServiceAvailable(ApiService pService) {
-		if (pService.isLoggined())
+		if (pService.isLoggedIn())
 			update(pService.getCarData());
 	}
 

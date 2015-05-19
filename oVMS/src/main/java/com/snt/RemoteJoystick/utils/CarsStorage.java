@@ -1,12 +1,5 @@
 package com.snt.RemoteJoystick.utils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -16,13 +9,21 @@ import android.util.Log;
 import com.snt.RemoteJoystick.BaseApp;
 import com.snt.RemoteJoystick.entities.CarData;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+
 public class CarsStorage {
-	private static final String TAG = "StorageCars";
+	private static final String TAG = "CarsStorage";
+
 	private static CarsStorage sInstance;
 	private final Context mContext = BaseApp.getApp();
 	private ArrayList<CarData> mStoredCars;
 	private String mLastSelectedCarId;
-	private SharedPreferences mPreferences;	
+	private SharedPreferences mPreferences;
 	
 	public static CarsStorage get() {
 		if (sInstance == null) {
@@ -57,7 +58,7 @@ public class CarsStorage {
 	
 	public void saveStoredCars() {
 		if (mStoredCars == null) return;
-		Log.d("RemoteJoystick", "Saving cars to interal storage...");
+		Log.d(TAG, "Saving cars to interal storage...");
 		try {
 
 			FileOutputStream fos = mContext.openFileOutput(Consts.STOREDCARS_FILENAME,
